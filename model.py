@@ -1,3 +1,4 @@
+from turtle import forward
 import torch
 import torch.nn as nn
 
@@ -75,6 +76,42 @@ class SimSiamNet(nn.Module):
                 ):
         X = self.backbone(X)
         X_proj = self.projector(X)
+        X_proj = X_proj.detach()
         X_pred = self.predictor(X_proj)
         return X_proj, X_pred
-        
+
+###
+
+class DownStreamNet(SimSiamNet):
+    def __init__(self,
+                 model_name: str = 'resnet50',
+                 pretrained: bool = False,
+                 device: str = 'cuda',
+                 ):
+        super().__init__()
+        for param in self.backbone.parameters():
+            param.requires_grad = False
+        self.head = Classifier(device=device)
+    
+    def forward(self,
+                X: torch.Tensor,
+                ):
+        X = self.backbone(X)
+        X = self.head(X)
+        return X
+
+###
+
+class Classifier(nn.Module):
+    def __init__(self,
+                 num_classes: int = 10,
+                 device: str = 'cuda',
+                 ):
+        super().__init__()
+        self.head = nn.Linear(1000, num_classes, device=device)
+
+    def forward(self,
+                X: torch.Tensor,
+                ):
+        X = self.head(X)
+        return X

@@ -18,8 +18,6 @@ def do_train_epoch(dataloader: DataLoader,
     model = model.train()
     total_loss = 0
     step = 0
-    p1_hist, p2_hist = [], []
-    z1_hist, z2_hist = [], []
 
     for i, (target1, target2) in enumerate(dataloader):
         target1, target2 = target1.to('cuda'), target2.to('cuda')
@@ -36,21 +34,25 @@ def do_train_epoch(dataloader: DataLoader,
             print("NaNs in loss function, loss-sum: {}".format(torch.sum(loss)))
         total_loss += loss
         
-        if i%1==0:
-            wandb.log({'running_loss':total_loss, 
+        if i%100==0:
+            wandb.log({'current_loss':loss,
+                       'running_loss':total_loss, 
                        'batch_num':i, 
+                       'p1_mean':p1.mean(),
+                       'p2_mean':p2.mean(),
+                       'z1_mean':z1.mean(),
+                       'z2_mean':z2.mean(),
                        'p1_std':p1.std(dim=1).mean(),
                        'p2_std':p2.std(dim=1).mean(),
                        'z1_std':z1.std(dim=1).mean(),
                        'z2_std':z2.std(dim=1).mean(),
                        })
 
+        optim.zero_grad()
         # scaler.scale(loss).backward()
         loss.backward()
-
         # scaler.step(optim)
         optim.step()
-        optim.zero_grad()
 
         if lr_sched:
             lr_sched.step()
@@ -91,6 +93,7 @@ def do_n_epochs(train_dataloader: DataLoader,
                 optim: torch.optim,
                 lr_sched: torch.optim,
                 num_epochs: int = 1,
+                dataset_path: str = '',
                 ):
     #scaler = torch.cuda.amp.GradScaler()
 
@@ -111,4 +114,6 @@ def do_n_epochs(train_dataloader: DataLoader,
 
         print("Epoch: {}\tTrain loss: {:.2f}\tValid loss: {:.2f}\n".format(epoch, train_loss, valid_loss))
 
-        torch.save( obj=model.state_dict(), f=f'model_{epoch+1}.pth' )
+        dataset_name = dataset_path.split('/')[-1]
+
+        torch.save( obj=model.backbone.state_dict(), f='models/'+dataset_name+'/'+f'pretrain_model_{epoch+1}.pth' )
