@@ -197,6 +197,7 @@ def train_task(dataset_path: str,
 def validate_task(dataset_path: str,
                   pretrained_weight_path: str,
                   batch_size: int = 1,
+                  num_samples: int = 9,
                   device: str = 'cuda',
                   ):
     if dataset_path == 'CIFAR10':
@@ -206,13 +207,7 @@ def validate_task(dataset_path: str,
 
     idx_to_class = {v:k for k,v in dataset.class_to_idx.items()}
 
-    valid_size = dataset.__len__()
-    data_split = [dataset.__len__()-valid_size, valid_size]
-    
-    train_dataset, valid_dataset = torch.utils.data.random_split(dataset, 
-                                                                 lengths=data_split)
-
-    valid_dataloader = DataLoader(dataset=valid_dataset, 
+    valid_dataloader = DataLoader(dataset=dataset, 
                                   batch_size=batch_size, 
                                   )
                                 
@@ -227,13 +222,10 @@ def validate_task(dataset_path: str,
         print("Attempted weight loading failed.")
         print(err)
         return 
-    ####################
-
-    # MAP CLASS LABELS TO VECTORS
-    num_classes = len(dataset.class_to_idx)
-    #############################
     
     model = model.eval()
+    total_num = 0
+    correct_num = 0
 
     with torch.no_grad():
         samples = []
@@ -243,22 +235,32 @@ def validate_task(dataset_path: str,
             
             predict = model(input)
 
-            samples.append([input,label,predict])
-            if len(samples) > 8:
-                break
+            label_idx = label.item()
+            predict_idx = torch.argmax(predict).item()
 
-    fig, axs = plt.subplots(3,3)
+            total_num += 1
+            if label_idx == predict_idx:
+                correct_num += 1
+
+            if len(samples) < num_samples:
+                samples.append([input,label_idx,predict_idx])
+    
+    fig_num = int(num_samples**(0.5))
+    fig, axs = plt.subplots(fig_num,
+                            fig_num,
+                            constrained_layout=True,
+                            )
+    fig.suptitle(f'Accuracy: {correct_num/total_num}', fontsize=16)
+
     i,j = 0,0
     for (input, label, predict) in samples:
-        label_idx = label.item()
-        predict_idx = torch.argmax(predict).item()
         axs[j][i].imshow(input[0].cpu().permute(1,2,0))
-        axs[j][i].set_title(f'{idx_to_class[label_idx]} - {idx_to_class[predict_idx]}')
-        if label_idx != predict_idx:
+        axs[j][i].set_title(f'{idx_to_class[label]} - {idx_to_class[predict]}')
+        if label != predict:
             rect = patches.Rectangle((0, 0), 31, 31, linewidth=3, edgecolor='r', facecolor='none')
             axs[j][i].add_patch(rect)
         i += 1
-        if i >= 3:
+        if i >= fig_num:
             j += 1
             i = 0
     plt.show()
@@ -273,18 +275,19 @@ if __name__ == '__main__':
                )
 
     train_task(dataset_path           = 'CIFAR10',
-               pretrained_weight_path = './models/CIFAR10/pretrain_model_20.pth',
-               init_lr                = 5e-2,
+               pretrained_weight_path = './models/CIFAR10/pretrain_model_30.pth',
+               init_lr                = 5e-3,
                batch_size             = 16,
                shuffle                = True,
                num_workers            = 4,
-               num_epochs             = 30,
+               num_epochs             = 20,
                device                 = 'cuda',
                )
 
     validate_task(dataset_path           = 'CIFAR10',
-                  pretrained_weight_path = './models/CIFAR10/model_20.pth',
+                  pretrained_weight_path = './models/CIFAR10/model_30.pth',
                   batch_size             = 1,
+                  num_samples            = 16,
                   device                 = 'cuda',
                   )
     
