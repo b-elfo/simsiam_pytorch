@@ -11,16 +11,23 @@ import wandb
 ###
 
 def train():
-    init_lr = 5e-2
+    init_lr = 5e-3
     batch_size = 16
     shuffle = True
     num_workers = 4
-    num_epochs = 20
+    num_epochs = 30
 
-    train_dataloader, valid_dataloader = dataloader('/media/elfo/Elfo Bkup/Seagate Portable/bird_identifier/train', #'/home/elfo/side_projects/simsiam/feature_extractor/birds_unlablled_noframes',
+    dataset_path = 'CIFAR10'
+    size = 32
+    # dataset_path = '/media/elfo/Elfo Bkup/Seagate Portable/bird_identifier/train' # needs to be fixed, add 'glob.glob' to dataset imag dir collection
+    # dataset_path = '/home/elfo/side_projects/simsiam/feature_extractor/birds_unlablled_noframes'
+    # size = 256
+
+    train_dataloader, valid_dataloader = dataloader(dataset_path,
                                                     batch_size=batch_size,
                                                     shuffle=shuffle,
                                                     num_workers=num_workers,
+                                                    size=size,
                                                     )
 
     model = SimSiamNet(model_name='swsl_resnet50',
@@ -35,7 +42,10 @@ def train():
                           steps_per_epoch=len(train_dataloader),
                           )
 
-    wandb.init(project='simsiam_birds')
+    wandb.init(entity='elfo',
+               project='simsiam_birds', 
+               name='CIFAR10_pretraining'
+               )
 
     do_n_epochs(train_dataloader=train_dataloader,
                 valid_dataloader=valid_dataloader,
@@ -44,6 +54,7 @@ def train():
                 optim=optim,
                 lr_sched=lr_sched,
                 num_epochs=num_epochs,
+                dataset_path=dataset_path,
                 )
 
 if __name__=='__main__':

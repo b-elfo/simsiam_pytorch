@@ -6,23 +6,36 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 
 from torchvision import transforms
+from torchvision.datasets import CIFAR10
 
 ###
 
 class SimSiamDataset(Dataset):
     def __init__(self, 
-                 path):
+                 path,
+                 size: int = 256,
+                 ):
         self.path = path
-        self.img_dirs = [ img_dir for img_dir in os.listdir(path) if '.jpg' in img_dir ]
-        self.transform = self.simsiam_transforms()
+        if self.path=='CIFAR10':
+            self.dataset = CIFAR10(root='data/', download=True, transform=transforms.ToTensor())
+        else:
+            self.img_dirs = [ img_dir for img_dir in os.listdir(path) if '.jpg' in img_dir ]
+        self.transform = self.simsiam_transforms(size=size)
 
     def __len__(self):
-        return len(self.img_dirs)
+        if self.path=='CIFAR10':
+            return self.dataset.__len__()
+        else:
+            return len(self.img_dirs)
 
     def __getitem__(self, 
                      idx):
-        img_dir = os.path.join( self.path, self.img_dirs[idx] )
-        img = Image.open(img_dir)
+        if self.path=='CIFAR10':
+            img, _ = self.dataset.__getitem__(idx)
+            # img = img.numpy()
+        else:
+            img_dir = os.path.join( self.path, self.img_dirs[idx] )
+            img = Image.open(img_dir)
         target1 = self.transform(img)
         target2 = self.transform(img)
         return target1, target2
@@ -45,7 +58,7 @@ class SimSiamDataset(Dataset):
         # gray
         gray_p = 0.2
         # gaussian
-        kernel = int(0.1*256)
+        kernel = int(0.1*size)
         kernel += (kernel-1)%2
         sigma = (0.1,2.0)
         gauss_p = 0.5
@@ -55,18 +68,22 @@ class SimSiamDataset(Dataset):
                                    transforms.RandomApply([transforms.ColorJitter(brightness=brightness, contrast=contrast, saturation=saturation, hue=hue)], p=colour_p),
                                    transforms.RandomGrayscale(p=gray_p),
                                    transforms.RandomApply([transforms.GaussianBlur(kernel_size=kernel, sigma=sigma)], p=gauss_p),
-                                   transforms.ToTensor()
+                                   #transforms.ToTensor()
                                    ])
 
 def dataloader(path,
-               batch_size=32, 
-               shuffle=True, 
-               num_workers=1,
+               batch_size: int = 32, 
+               shuffle: bool = True, 
+               num_workers: int =1,
+               size: int = 256,
                ):
     """
     
     """
-    dataset = SimSiamDataset(path)
+    dataset = SimSiamDataset(path, 
+                             size=size,
+                             )
+    
     valid_size = dataset.__len__()//4
     data_split = [dataset.__len__()-valid_size, valid_size]
     

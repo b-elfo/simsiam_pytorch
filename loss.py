@@ -26,8 +26,8 @@ class SimSiamLoss(_WeightedLoss):
         # z1 = z1.unsqueeze(dim=0)
         # z2 = z2.unsqueeze(dim=0)
 
-        z1 = z1.detach()
-        z2 = z2.detach()
+        # z1 = z1.detach()
+        # z2 = z2.detach()
 
         loss = self._D(p1,z2).mean()*0.5 + self._D(p2,z1).mean()*0.5
         return loss
