@@ -11,7 +11,7 @@ import wandb
 ###
 
 def train():
-    init_lr = 5e-3
+    max_lr = 5e-3
     batch_size = 16
     shuffle = True
     num_workers = 4
@@ -34,10 +34,10 @@ def train():
                        pretrained=True)
     loss_func = SimSiamLoss()
     optim = torch.optim.Adam(params=model.parameters(), 
-                             lr=init_lr)
+                             lr=max_lr)
 
     lr_sched = OneCycleLR(optimizer=optim,
-                          max_lr=init_lr,
+                          max_lr=max_lr,
                           epochs=num_epochs,
                           steps_per_epoch=len(train_dataloader),
                           )
