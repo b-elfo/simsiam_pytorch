@@ -155,9 +155,8 @@ def train_task(dataset_path: str,
                                   )
                                 
     model = DownStreamNet(model_name='swsl_resnet50',
-                          pretrained=True)
+                          pretrained=False)
 
-    # LOAD MODEL ENCODER 
     weights = torch.load(pretrained_weight_path)
     try:
         model.backbone.load_state_dict(weights)
@@ -165,12 +164,9 @@ def train_task(dataset_path: str,
         print("Attempted weight loading failed.")
         print(err)
         return 
-    ####################
 
-    # MAP CLASS LABELS TO VECTORS
     num_classes = len(dataset.class_to_idx)
     one_hot = nn.functional.one_hot(torch.arange(0,num_classes)).float().to(device)
-    #############################
 
     loss_func = nn.CrossEntropyLoss()
     optim = torch.optim.Adam(params=model.parameters(), 
