@@ -11,8 +11,8 @@ import wandb
 ###
 
 def train():
-    max_lr = 5e-3
-    batch_size = 16
+    max_lr = 5e-4
+    batch_size = 32
     shuffle = True
     num_workers = 4
     num_epochs = 30

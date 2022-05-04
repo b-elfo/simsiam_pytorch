@@ -276,11 +276,11 @@ if __name__ == '__main__':
 
     train_task(dataset_path           = 'CIFAR10',
                pretrained_weight_path = './models/CIFAR10/pretrain_model_30.pth',
-               init_lr                = 5e-3,
-               batch_size             = 16,
+               init_lr                = 5e-4,
+               batch_size             = 32,
                shuffle                = True,
                num_workers            = 4,
-               num_epochs             = 20,
+               num_epochs             = 30,
                device                 = 'cuda',
                )
 
