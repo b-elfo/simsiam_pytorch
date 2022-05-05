@@ -41,7 +41,7 @@ def do_train_epoch(dataloader: DataLoader,
             print("NaNs in loss function, loss-sum: {}".format(torch.sum(loss)))
         total_loss += loss
         
-        if i%100==0:
+        if i%1000==0:
             wandb.log({'current_loss':loss,
                        'running_loss':total_loss, 
                        'batch_num':i,
@@ -54,7 +54,7 @@ def do_train_epoch(dataloader: DataLoader,
         if lr_sched:
             lr_sched.step()
         
-        if step%500==0:
+        if step%1000==0:
             print("Step: {}\tLoss: {:.2f}".format(step, loss))
         step+=1
 
@@ -207,7 +207,7 @@ def validate_task(dataset_path: str,
                                   batch_size=batch_size, 
                                   )
                                 
-    model = DownStreamNet(model_name='swsl_resnet50',
+    model = DownStreamNet(model_name='resnet50',
                           pretrained=True)
 
     # LOAD MODEL ENCODER 
@@ -272,8 +272,8 @@ if __name__ == '__main__':
 
     train_task(dataset_path           = 'CIFAR10',
                pretrained_weight_path = './models/CIFAR10/pretrain_model_30.pth',
-               init_lr                = 5e-4,
-               batch_size             = 32,
+               init_lr                = 4e-4,
+               batch_size             = 64,
                shuffle                = True,
                num_workers            = 4,
                num_epochs             = 30,

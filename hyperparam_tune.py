@@ -102,7 +102,7 @@ def objective_downstream(trial):
     kwargs = DEFAULT_HYPERPARAMS.copy()
     kwargs.update(simsiam_params(trial))
 
-    pretrained_weight_path = './models/CIFAR10/pretrain_model_30.pth',
+    pretrained_weight_path = './models/CIFAR10/pretrain_model_30.pth'
     
     shuffle = True
     num_workers = 4
@@ -150,7 +150,7 @@ def objective_downstream(trial):
     optimizer = torch.optim.Adam(params=model.parameters(), 
                                  lr=kwargs['max_lr'],
                                  )
-    lr_sched = OneCycleLR(optimizer=optim,
+    lr_sched = OneCycleLR(optimizer=optimizer,
                           max_lr=kwargs['max_lr'],
                           epochs=EPOCHS,
                           steps_per_epoch=len(train_dataloader),
